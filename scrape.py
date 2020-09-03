@@ -13,6 +13,8 @@ print(f'Resuming from\nTab: {start0}\nCategory: {start1}\nSub-Category: {start2}
 filter1=[] #enter tab(s) to skip
 filter2=[] #enter category/categories to skip
 filter3=[] #enter sub-category/sub-categories to skip
+limitarticles = 1 #limit articles per category else set to None
+flag = limitarticles!=None
 
 driver_path = 'chromedriver.exe'
 #options to make selenium faster
@@ -34,10 +36,14 @@ url = 'https://shop.nordstrom.com/'
 driver.get(url)
 sleep(10)
 
+popup = driver.find_elements_by_css_selector('a.frZCJ')
+if len(popup)!=0:
+    popup[0].click()
+
 tabs = driver.find_elements_by_css_selector('button._2PDR1')
 tabs = tabs[1:-1]
 
-#tabs
+#~tabs
 for i in range(start0,len(tabs)):
     tabs = driver.find_elements_by_css_selector('button._2PDR1')
     tabs = tabs[1:-1] #skipping SALE and BRAND tabs
@@ -89,6 +95,8 @@ for i in range(start0,len(tabs)):
                 driver.get(f'{urll}&page={page}')
                 arts = driver.find_elements_by_css_selector('a._1av3_')
                 links3.extend([cat.get_attribute('href') for cat in arts])
+                if flag and len(links3)>=limitarticles:
+                    break
                 
             lengthlinks = len(links3)
             #~article page
@@ -102,6 +110,14 @@ for i in range(start0,len(tabs)):
                     brand = driver.find_element_by_css_selector('span._1i-_6').text
                 except:
                     brand = 'Others'
+                try:
+                    price = driver.find_element_by_id('current-price-string').text
+                except:
+                    price = 'PKR 0'
+                try:
+                    detail = driver.find_element_by_id('product-page-selling-statement').text
+                except:
+                    detail = ''
                 colorsbtn = driver.find_elements_by_css_selector('button._3kLmr')
                 colorsname = driver.find_elements_by_css_selector('img.zGPcv')
                 
@@ -124,17 +140,25 @@ for i in range(start0,len(tabs)):
                                 dwnld = dwnld[:-10]
                             
                             with open("img_url.txt", "a") as f:
-                                f.write(f"{crnt},{dwnld}\n")
+                                f.write(f"{driver.current_url};{crnt};{dwnld};{detail};{price}\n")
                             with open("img_current.txt", "w") as f:
                                 f.write(f"{i},{j},{k},{l},{m}")
                     except:
                         with open("img_errors.txt", "a") as f: # write errors
                             f.write(f"{driver.current_url}\n")
                             
-                #break
-            #break
-        #break
-    #break    
+                start4 = 0
+                flag2 = flag and l-1==limitarticles
+                if flag2:
+                    break
+            start3 = 0
+            if flag2:
+                break  
+        start2 = 0
+        if flag2:
+          print(f"{i},{j},{k},{l}")
+          break
+    start1 = 0
     driver.get(url)
     sleep(10)
 
